@@ -31,7 +31,7 @@ def populate_casts(cast, cast_data):
     cast.thread_hash = cast_data.get('threadHash')
     cast.parent_source_type = cast_data.get('parentSource', {}).get('type')
     cast.parent_source_url = cast_data.get('parentSource', {}).get('url')
-    cast.author_fid = cast_data.get('author', {}).get('fid')
+    cast.fid = cast_data.get('author', {}).get('fid')
     cast.author_username = cast_data.get('author', {}).get('username')
     cast.author_display_name = cast_data.get('author', {}).get('displayName')
     cast.author_pfp_url = cast_data.get('author', {}).get('pfp', {}).get('url')

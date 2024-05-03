@@ -33,15 +33,15 @@ def fetch_and_populate_casts(fid, limit):
                     print("Cast with hash {} is populated!".format(cast_data['hash']))
                 db.session.commit()  # Commit after all casts have been processed
             else:
-                print("Error fetching casts for FID {}".format(fid))
+                print("Error fetching casts for FID {}".format(fid + 1))
         except Exception as e:
             db.session.rollback()
-            print("Error fetching casts for FID {}: {}".format(fid, str(e)))
+            print("Error fetching casts for FID {}: {}".format(fid + 1, str(e)))
 
                             
 def get_max_fid():
     max_fid = db.session.query(db.func.max(AllProfile.fid)).scalar()
-    return max_fid if max_fid else 0
+    return max_fid if max_fid else 508808
 
 def get_response(fid):
     api_url = f'https://api.warpcast.com/v2/user?fid={fid}'
@@ -55,14 +55,14 @@ def fetch_and_update_user(app):
             response = get_response(fid + 1)
             if response.status_code == 200:
                 user_data = response.json()['result']['user']
-                profile = NewProfile.query.filter_by(fid=user_data['fid']).first()
-                if not profile:
-                    profile = NewProfile(fid=user_data['fid'])
-                    db.session.add(profile)
-                populate_profile(profile, user_data)
-                fetch_and_populate_casts(fid, 100) # Populate casts for the user.
+                new_profile = NewProfile.query.filter_by(fid=user_data['fid']).first()
+                if not new_profile:
+                    new_profile = NewProfile(fid=user_data['fid'])
+                    db.session.add(new_profile)
+                populate_profile(new_profile, user_data)
                 db.session.commit()
-                print('Item with FID {} is populated!'.format(fid))
+                fetch_and_populate_casts(fid + 1, 100) # Populate casts for the user.
+                print('Item with FID {} is populated in new profile!'.format(fid + 1))
         except SQLAlchemyError as e:
             db.session.rollback()
             print(f"Database operation failed: {e}")
@@ -73,7 +73,7 @@ def fetch_and_update_all_profiles():
     with app.app_context():
         try:
             max_fid = get_max_fid()
-            for fid in range(max_fid + 1): 
+            for fid in range(1, max_fid + 1): 
                 response = requests.get(f'https://api.warpcast.com/v2/user?fid={fid}')
                 if response.status_code == 200:
                     user_data = response.json()['result']['user']
@@ -84,7 +84,7 @@ def fetch_and_update_all_profiles():
 
                     populate_profile(profile, user_data)  # Populate fields
                     db.session.commit()
-                    print('Item with {} is populated!'.format(fid))
+                    print('Item with {} is populated in all profile!'.format(fid))
                 else:
                     print(f"Failed to fetch profile for fid {fid}. Status code: {response.status_code}")
         except:
@@ -94,8 +94,8 @@ def fetch_and_update_all_profiles():
 
     
 scheduler = BackgroundScheduler()
-scheduler.add_job(func= lambda: fetch_and_update_all_profiles(), trigger='interval', seconds=60)
-scheduler.add_job(func = lambda: fetch_and_update_user(app), trigger='interval', seconds=20)
+scheduler.add_job(func= lambda: fetch_and_update_all_profiles(), trigger='interval', hours=24*7)
+scheduler.add_job(func = lambda: fetch_and_update_user(app), trigger='interval', seconds=60)
 scheduler.start()
 
 @app.route('/')
