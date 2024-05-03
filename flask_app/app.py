@@ -102,14 +102,18 @@ scheduler.start()
 def main():
     return "User profile updater is running!"
 
-@app.route('/follow/<int:follower_id>/<int:user_id>', methods=['POST'])
-def follow(follower_id, user_id):
+@app.route('/follow', methods=['POST'])
+def follow():
     headers = {
         "Authorization": "Bearer MK-s1EcIl87La9zaBBWPdrZ9bPzxWcDCWDB5CMJTJR2Qm19zVpxg91drvCYkelvFIEhY9//fXS0ozkA3qgL0W4fsQ==",
         "Content-Type": "application/json; charset=utf-8",
         "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36"
     }
     url = "https://client.warpcast.com/v2/follows"
+    
+    params = request.get_json()
+    follower_id = params.get('follower_id')
+    user_id = params.get('user_id')
     data = {
         "targetFid": "{}".format(user_id),
         "e": json.dumps([{
