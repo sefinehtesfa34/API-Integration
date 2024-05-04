@@ -1,12 +1,17 @@
 import json
 import logging
 import requests
-from flask import jsonify, request
+from flask import Flask
+from flask_sqlalchemy import SQLAlchemy
+from datetime import datetime, timedelta
 from sqlalchemy.exc import SQLAlchemyError
 from apscheduler.schedulers.background import BackgroundScheduler
-from .populate import populate_profile, populate_casts
-from .schema import BaseProfile, Casts, app, db
-import time
+app = Flask(__name__)
+app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql+psycopg2://postgres:Sql2844@localhost/profile'
+app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+db = SQLAlchemy(app)
+
 # File based logging
 
 # logging.basicConfig(level=logging.DEBUG,
@@ -19,7 +24,55 @@ logging.basicConfig(level=logging.INFO,
                     format='%(asctime)s - %(levelname)s - %(message)s',
                     datefmt='%d-%b-%y %H:%M:%S')
 
+class BaseProfile(db.Model):
+    __abstract__ = True  # This makes it so this class is not used to create any table
+    id = db.Column(db.Integer, primary_key=True)
+    username = db.Column(db.String(255))
+    display_name = db.Column(db.String(255))
+    pfp_url = db.Column(db.String(1024))
+    pfp_verified = db.Column(db.Boolean)
+    bio_text = db.Column(db.Text)
+    location_place_id = db.Column(db.String(255))
+    location_description = db.Column(db.String(255))
+    follower_count = db.Column(db.Integer)
+    following_count = db.Column(db.Integer)
+    active_on_fc_network = db.Column(db.Boolean)
+    viewer_context_following = db.Column(db.Boolean)
+    viewer_context_followed_by = db.Column(db.Boolean)
+    viewer_context_can_send_direct_casts = db.Column(db.Boolean)
+    viewer_context_enable_notifications = db.Column(db.Boolean)
+    viewer_context_has_uploaded_inbox_keys = db.Column(db.Boolean)
+    extras_custody_address = db.Column(db.String(255))
+    is_followed = db.Column(db.Boolean, default=False)
+    date_added = db.Column(db.DateTime, default=datetime.now())
+    date_updated = db.Column(db.DateTime, default=datetime.now(), onupdate=datetime.now())
     
+class Casts(db.Model):
+    __tablename__ = 'casts'
+    id = db.Column(db.Integer, primary_key=True)
+    casts_hash = db.Column(db.String(255))
+    thread_hash = db.Column(db.String(255))
+    parent_source_type = db.Column(db.String(255))
+    parent_source_url = db.Column(db.String(1024))
+    author_fid = db.Column(db.BigInteger)
+    author_username = db.Column(db.String(255))
+    author_display_name = db.Column(db.String(255))
+    author_pfp_url = db.Column(db.String(1024))
+    author_pfp_verified = db.Column(db.Boolean)
+    author_profile_bio = db.Column(db.Text)
+    author_profile_location_description = db.Column(db.Text)
+    author_follower_count = db.Column(db.Integer)
+    author_following_count = db.Column(db.Integer)
+    author_active_on_fc_network = db.Column(db.Boolean)
+    message_text = db.Column(db.Text)
+    timestamp = db.Column(db.DateTime)
+    replies_count = db.Column(db.Integer)
+    reactions_count = db.Column(db.Integer)
+    recasts_count = db.Column(db.Integer)
+    watches_count = db.Column(db.Integer)
+    quote_count = db.Column(db.Integer) 
+    combined_recast_count = db.Column(db.Integer)
+
 class AllProfile(BaseProfile):
     __tablename__ = 'all_profiles'
     fid = db.Column(db.BigInteger, unique = False, nullable=False)
@@ -28,6 +81,64 @@ class NewProfile(BaseProfile):
     __tablename__ = 'new_profiles'
     fid = db.Column(db.BigInteger, unique = True, nullable=False)
 
+def populate_profile(profile, user_data):
+    # Helper function to populate a profile with data from a dictionary
+    profile.username = user_data.get('username')
+    profile.display_name = user_data.get('displayName')
+    profile.pfp_url = user_data.get('pfp', {}).get('url')
+    profile.pfp_verified = user_data.get('pfp', {}).get('verified', False)
+    profile.bio_text = user_data.get('profile', {}).get('bio', {}).get('text', '')
+    profile.location_place_id = user_data.get('profile', {}).get('location', {}).get('placeId', '')
+    profile.location_description = user_data.get('profile', {}).get('location', {}).get('description', '')
+    profile.follower_count = user_data.get('followerCount', 0)
+    profile.following_count = user_data.get('followingCount', 0)
+    profile.active_on_fc_network = user_data.get('activeOnFcNetwork', False)
+    profile.viewer_context_following = user_data.get('viewerContext', {}).get('following', False)
+    profile.viewer_context_followed_by = user_data.get('viewerContext', {}).get('followedBy', False)
+    profile.viewer_context_can_send_direct_casts = user_data.get('viewerContext', {}).get('canSendDirectCasts', False)
+    profile.viewer_context_enable_notifications = user_data.get('viewerContext', {}).get('enableNotifications', False)
+    profile.viewer_context_has_uploaded_inbox_keys = user_data.get('viewerContext', {}).get('hasUploadedInboxKeys', False)
+    profile.extras_custody_address = user_data.get('extras', {}).get('custodyAddress', '')
+    profile.date_added = user_data.get('dateAdded', datetime.now())
+    profile.date_updated = user_data.get('dateUpdated', datetime.now())
+    profile.is_followed = False
+    return profile
+
+def convert_milliseconds_to_datetime(ms):
+    """Convert milliseconds since epoch to a datetime object."""
+    return datetime(1970, 1, 1) + timedelta(milliseconds=ms)
+
+def populate_casts(cast, cast_data):
+    cast.casts_hash = cast_data.get('hash')
+    cast.thread_hash = cast_data.get('threadHash')
+    cast.parent_source_type = cast_data.get('parentSource', {}).get('type')
+    cast.parent_source_url = cast_data.get('parentSource', {}).get('url')
+    cast.fid = cast_data.get('author', {}).get('fid')
+    cast.author_username = cast_data.get('author', {}).get('username')
+    cast.author_display_name = cast_data.get('author', {}).get('displayName')
+    cast.author_pfp_url = cast_data.get('author', {}).get('pfp', {}).get('url')
+    cast.author_pfp_verified = cast_data.get('author', {}).get('pfp', {}).get('verified', False)
+    cast.author_profile_bio = cast_data.get('author', {}).get('profile', {}).get('bio', {}).get('text', '')
+    cast.author_profile_location_description = cast_data.get('author', {}).get('profile', {}).get('location', {}).get('description', '')
+    cast.author_follower_count = cast_data.get('author', {}).get('followerCount', 0)
+    cast.author_following_count = cast_data.get('author', {}).get('followingCount', 0)
+    cast.author_active_on_fc_network = cast_data.get('author', {}).get('activeOnFcNetwork', False)
+    cast.message_text = cast_data.get('text', '')
+    
+    # Convert timestamp
+    timestamp_ms = cast_data.get('timestamp')
+    if timestamp_ms is not None:
+        cast.timestamp = convert_milliseconds_to_datetime(timestamp_ms)
+    else:
+        cast.timestamp = datetime.now()  # or use default, if appropriate
+
+    cast.replies_count = cast_data.get('replies', {}).get('count', 0)
+    cast.reactions_count = cast_data.get('reactions', {}).get('count', 0)
+    cast.recasts_count = cast_data.get('recasts', {}).get('count', 0)
+    cast.watches_count = cast_data.get('watches', {}).get('count', 0)
+    cast.quote_count = cast_data.get('quoteCount', 0)
+    cast.combined_recast_count = cast_data.get('combinedRecastCount', 0)
+    
 with app.app_context():
     db.create_all()
 
