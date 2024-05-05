@@ -1,0 +1,78 @@
+{% extends 'base.html' %}
+{% block title %}Welcome to Warpcast API Automation{% endblock %}
+{% block content %}
+<div class="pt-5 mt-3">
+    <div class="jumbotron text-center bg-light">
+        <h1>Welcome to Warpcast API Automation!</h1>
+        <p>Explore the latest user interactions and statistics!</p>
+    </div>
+
+    <div id="featureCarousel" class="carousel slide" data-bs-ride="carousel">
+        <div class="carousel-inner">
+            <div class="carousel-item active">
+                <img src="{{ url_for('static', filename='images/earn.jpg') }}" alt="Warpcast" width="100%" height="50%">
+
+                <div class="carousel-caption d-none d-md-block">
+        
+                    <strong>Discover the newest members of our community.</strong>
+                </div>
+            </div>
+            <div class="carousel-item">
+                <img src="{{ url_for('static', filename='images/recent_users.png') }}" alt="Warpcast">
+                <div class="carousel-caption d-none d-md-block">
+                    <h5>Top Followers</h5>
+                    <p>See who's leading in followers within our network.</p>
+                </div>
+            </div>
+            <div class="carousel-item">
+                <img src="{{ url_for('static', filename='images/warpcast.jpg') }}" alt="Warpcast">
+                <div class="carousel-caption d-none d-md-block">
+                    <h5>Messages</h5>
+                    <p>Stay updated with the latest messages from our users.</p>
+                </div>
+            </div>
+        </div>
+        <button class="carousel-control-prev" type="button" data-bs-target="#featureCarousel" data-bs-slide="prev">
+            <span class="carousel-control-prev-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Previous</span>
+        </button>
+        <button class="carousel-control-next" type="button" data-bs-target="#featureCarousel" data-bs-slide="next">
+            <span class="carousel-control-next-icon" aria-hidden="true"></span>
+            <span class="visually-hidden">Next</span>
+        </button>
+    </div>
+
+    <div class="row mt-4">
+        <div class="col-md-4">
+            <div class="card">
+                <img src="{{ url_for('static', filename='images/recent_users.png') }}" alt="Warpcast">
+                <div class="card-body">
+                    <h5 class="card-title">Recent Users</h5>
+                    <p class="card-text">Get to know the latest users to join our platform.</p>
+                    <a href="/recent-users" class="btn btn-primary">View Users</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <img src="{{ url_for('static', filename='images/top_followers.png') }}" alt="Warpcast">
+                <div class="card-body">
+                    <h5 class="card-title">Top Followers</h5>
+                    <p class="card-text">Explore profiles with the highest number of followers.</p>
+                    <a href="/top-followers" class="btn btn-primary">View Leaders</a>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card">
+                <img src="{{ url_for('static', filename='images/top_following.png') }}" alt="Warpcast">
+                <div class="card-body">
+                    <h5 class="card-title">Messages</h5>
+                    <p class="card-text">Read the latest messages from our community.</p>
+                    <a href="/messages" class="btn btn-primary">Check Messages</a>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

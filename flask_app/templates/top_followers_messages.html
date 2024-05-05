@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% block title %}Top Messages by Followers{% endblock %}
+{% block content %}
+<div class="container mt-4">
+    <h1 class="mb-4">Top Messages by Followers</h1>
+    <div class="list-group">
+        {% for cast in messages %}
+        <div class="list-group-item">
+            <div class="d-flex w-100 justify-content-between">
+                <small class="text-muted">{{ cast.timestamp.strftime('%Y-%m-%d %H:%M:%S') }}</small>
+            </div>
+            <p class="mb-1">{{ cast.message_text }}</p>
+        </div>
+        {% endfor %}
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,17 @@
+{% extends 'base.html' %}
+{% block title %}Recent Users{% endblock %}
+{% block content %}
+<h1 class="mb-3">Recent Users</h1>
+<div class="list-group">
+    {% for user in users %}
+    <a href="#" class="list-group-item list-group-item-action">
+        <div class="d-flex w-100 justify-content-between">
+            <h5 class="mb-1">{{ user.username }}</h5>
+            <small>Followers: {{ user.follower_count }}</small>
+        </div>
+        <p class="mb-1">Following: {{ user.following_count }}</p>
+        <small>Recent Message: {{ user.message_text | default('No message available') }}</small>
+    </a>
+    {% endfor %}
+</div>
+{% endblock %}

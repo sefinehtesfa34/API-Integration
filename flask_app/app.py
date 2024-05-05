@@ -6,6 +6,7 @@ from flask_sqlalchemy import SQLAlchemy
 from datetime import datetime, timedelta
 from sqlalchemy.exc import SQLAlchemyError
 from apscheduler.schedulers.background import BackgroundScheduler
+from flask import render_template
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'postgresql+psycopg2://postgres:Sql2844@localhost/profile'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
@@ -260,7 +261,31 @@ scheduler.start()
 
 @app.route('/')
 def main():
-    return "User profile updater is running!"
+    return render_template('index.html')
+
+@app.route('/recent-users')
+def recent_users():
+    recent_users = NewProfile.query.order_by(NewProfile.date_added.desc()).limit(10).all()
+    return render_template('recent_users.html', users=recent_users)
+
+@app.route('/top-followers')
+def top_followers():
+    users_by_followers = AllProfile.query.order_by(AllProfile.follower_count.desc()).limit(10).all()
+    return render_template('top_followers.html', users=users_by_followers)
+
+@app.route('/top-following')
+def top_following():
+    users_by_following = AllProfile.query.order_by(AllProfile.following_count.desc()).limit(10).all()
+    return render_template('top_following.html', users=users_by_following)
+
+@app.route('/messages')
+def top_followers_messages():
+    # Fetch messages from the database, excluding empty ones, and join with AllProfile to access follower counts
+    # Sort them by the follower count of their authors in descending order and limit to top 10
+    top_messages = db.session.query(Casts).limit(30).all()
+
+    return render_template('top_followers_messages.html', messages=top_messages)
+
 
 if __name__ == '__main__':
     app.run(debug=True)

@@ -1,0 +1,15 @@
+{% extends 'base.html' %}
+{% block title %}Top Followers{% endblock %}
+{% block content %}
+<h1 class="mb-3">Top Followers</h1>
+<div class="list-group">
+    {% for user in users %}
+    <a href="#" class="list-group-item list-group-item-action flex-column align-items-start">
+        <div class="d-flex w-100 justify-content-between">
+            <h5 class="mb-1">{{ user.username }}</h5>
+            <small>Total Followers: {{ user.follower_count }}</small>
+        </div>
+    </a>
+    {% endfor %}
+</div>
+{% endblock %}
