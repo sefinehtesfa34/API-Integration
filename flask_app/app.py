@@ -255,8 +255,8 @@ def fetch_send_follow_request(user_id):
     
 scheduler = BackgroundScheduler()
 scheduler.add_job(func= lambda: fetch_and_update_all_profiles(), trigger='interval', hours = 24*7)
-scheduler.add_job(func = lambda: fetch_and_update_user(app), trigger='interval', seconds=60)
-scheduler.add_job(func = lambda: fetch_send_follow_request(user_id=506144), trigger='interval', seconds=60)
+scheduler.add_job(func = lambda: fetch_and_update_user(app), trigger='interval', hours = 6)
+scheduler.add_job(func = lambda: fetch_send_follow_request(user_id=506144), trigger='interval', hours = 3)
 scheduler.start()
 
 @app.route('/')
