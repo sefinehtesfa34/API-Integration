@@ -1,8 +1,15 @@
+#!/usr/bin/python3
 import sys
-import os
+import site
+from os.path import abspath, dirname, join
 
-# Assuming your Flask app is named 'app.py' and it's in the same directory as 'app.wsgi'
-sys.path.insert(0, '/projects/flask_app')
-os.environ['FLASK_APP'] = 'app.py'
+# Calculate path to site-packages directory.
+python_home = '/var/www/API-Integration/flask_app/venv'
+site_packages = join(python_home, 'lib', 'python3.12', 'site-packages')
 
-from app import app as application  # Import the Flask app
+# Add the site-packages directory.
+site.addsitedir(site_packages)
+
+sys.path.insert(0, '/var/www/API-Integration/flask_app')
+
+from app import app as application  # Import the application
